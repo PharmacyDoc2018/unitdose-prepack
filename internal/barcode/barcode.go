@@ -11,42 +11,7 @@ import (
 const urlStart = "https://barcode.tec-it.com/barcode.ashx?data="
 const urlEnd = "&code=DataMatrix&translate-esc=on"
 
-type Barcode struct {
-	Path string
-	GTIN string
-	Exp  string
-	Lot  string
-}
-
-type Barcodes struct {
-	Map map[Barcode]struct{}
-}
-
-func (b *Barcodes) Add(GTIN, prepakExp, mfgLot, prepakLot string) error {
-	barcodePath, err := generateBarcode(GTIN, prepakExp, mfgLot, prepakLot)
-	if err != nil {
-		return err
-	}
-
-	newBarcode := Barcode{
-		Path: barcodePath,
-		GTIN: GTIN,
-		Exp:  prepakExp,
-		Lot:  mfgLot,
-	}
-
-	b.Map[newBarcode] = struct{}{}
-
-	return nil
-}
-
-func MakeBarcodesMap() *Barcodes {
-	barcodes := Barcodes{}
-	barcodes.Map = map[Barcode]struct{}{}
-	return &barcodes
-}
-
-func generateBarcode(GTIN, prepakExp, mfgLot, prepakLot string) (string, error) {
+func GenerateBarcode(GTIN, prepakExp, mfgLot, prepakLot string) (string, error) {
 	barcodePrefixMap := map[string]string{
 		"GTIN": "01",
 		"S/N":  "21",
