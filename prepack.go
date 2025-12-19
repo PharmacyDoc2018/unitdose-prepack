@@ -9,16 +9,21 @@ type PrePackTemplate struct {
 	Product         MfgProduct
 	BUD             time.Duration
 	ControlCatagory string
+	Active          bool
 }
 
 type PrePackTemplates struct {
 	Map map[PrePackTemplate]struct{}
 }
 
+func (p *PrePackTemplates) AddTemplate()
+
 type PrePackEntry struct {
 	Date        time.Time
-	Lot         string
+	PrePackLot  string
 	Medication  PrePackTemplate
+	MfgLot      string
+	MfgExp      time.Time
 	barcodePath string
 	Quantity    int
 }
