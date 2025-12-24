@@ -16,7 +16,7 @@ type PrePackTemplates struct {
 	Map map[PrePackTemplate]struct{}
 }
 
-func (p *PrePackTemplates) AddTemplate()
+//func (p *PrePackTemplates) AddTemplate()
 
 type PrePackEntry struct {
 	Date        time.Time
