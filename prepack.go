@@ -12,6 +12,10 @@ type PrePackTemplate struct {
 	Active          bool
 }
 
+func (p *PrePackTemplate) GetMfgProducts(c *config) []MfgProduct {
+	return c.MedProducts.Map[p.Medication][p.Dose][p.Form]
+}
+
 type PrePackTemplates struct {
 	Map map[PrePackTemplate]struct{}
 }
