@@ -5,23 +5,19 @@ import "fmt"
 func main() {
 	c := initConfig()
 
-	err := c.MedProducts.AddProduct("diphenhydrAMINE PO CAP", "25 mg", "PO CAP", "Reliable-1 Laboratories", "69618-0024-01", "00369618024014")
-	if err != nil {
-		fmt.Println(err.Error())
-	}
+	for med := range c.MedProducts.Map {
+		fmt.Println(med)
 
-	for key := range c.MedProducts.Map {
-		fmt.Println(key)
+		for dose := range c.MedProducts.Map[med] {
+			fmt.Println(dose)
+		}
 	}
 
 	errSlice := c.saveData()
-	if len(errSlice) > 1 {
+	if len(errSlice) > 0 {
 		for _, e := range errSlice {
 			fmt.Println(e.Error())
 		}
 	}
-
-	fmt.Println(c.medProductsPath)
-	//fmt.Printf("MedProducts: %#v\n", c.MedProducts)
 
 }

@@ -7,7 +7,7 @@ type MfgProduct struct {
 }
 
 type MedProducts struct {
-	Map map[string]map[string]map[string]map[MfgProduct]struct{} `json:"map"`
+	Map map[string]map[string]map[string][]MfgProduct `json:"map"`
 }
 
 func (m *MedProducts) AddProduct(medication, dose, form, mfgName, NDC, GTIN string) error {
@@ -18,18 +18,18 @@ func (m *MedProducts) AddProduct(medication, dose, form, mfgName, NDC, GTIN stri
 	}
 
 	if m.Map[medication] == nil {
-		m.Map[medication] = map[string]map[string]map[MfgProduct]struct{}{}
+		m.Map[medication] = map[string]map[string][]MfgProduct{}
 	}
 
 	if m.Map[medication][dose] == nil {
-		m.Map[medication][dose] = map[string]map[MfgProduct]struct{}{}
+		m.Map[medication][dose] = map[string][]MfgProduct{}
 	}
 
 	if m.Map[medication][dose][form] == nil {
-		m.Map[medication][dose][form] = map[MfgProduct]struct{}{}
+		m.Map[medication][dose][form] = []MfgProduct{}
 	}
 
-	m.Map[medication][dose][form][mfgProduct] = struct{}{}
+	m.Map[medication][dose][form] = append(m.Map[medication][dose][form], mfgProduct)
 
 	return nil
 }

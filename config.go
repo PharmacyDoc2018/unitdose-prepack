@@ -23,7 +23,7 @@ func initConfig() *config {
 	godotenv.Load(".env")
 	c.medProductsPath = os.Getenv("MED_PRODUCTS_PATH")
 
-	c.MedProducts.Map = map[string]map[string]map[string]map[MfgProduct]struct{}{}
+	c.MedProducts.Map = map[string]map[string]map[string][]MfgProduct{}
 	c.PrePackTemplates.Map = map[PrePackTemplate]struct{}{}
 
 	errorSlice := c.loadData()
@@ -41,26 +41,18 @@ func (c *config) saveData() []error {
 	errorSlice := []error{}
 
 	//-- Save c.MedProducts
-	err := func(c *config) error {
-		data, err := json.Marshal(c.MedProducts)
-		if err != nil {
-			return err
-		}
+	data, err := json.Marshal(c.MedProducts)
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
 
-		saveFile, err := os.OpenFile(c.medProductsPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-		if err != nil {
-			return err
-		}
-		defer saveFile.Close()
+	saveFile, err := os.OpenFile(c.medProductsPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+	defer saveFile.Close()
 
-		_, err = saveFile.Write(data)
-		if err != nil {
-			return err
-		}
-
-		return nil
-
-	}(c)
+	_, err = saveFile.Write(data)
 	if err != nil {
 		errorSlice = append(errorSlice, err)
 	}
@@ -73,28 +65,26 @@ func (c *config) loadData() []error {
 	errorSlice := []error{}
 
 	//-- Load MedProducts
-	err := func(c *config) error {
-		_, err := os.Stat(c.medProductsPath)
-		if err != nil {
-			return err
-		}
-
-		medProducts := MedProducts{}
-		data, err := os.ReadFile(c.medProductsPath)
-		if err != nil {
-			return err
-		}
-
-		err = json.Unmarshal(data, &medProducts)
-		if err != nil {
-			return err
-		}
-
-		c.MedProducts = medProducts
-		return nil
-	}(c)
+	_, err := os.Stat(c.medProductsPath)
 	if err != nil {
 		errorSlice = append(errorSlice, err)
+	}
+
+	medProducts := MedProducts{}
+	data, err := os.ReadFile(c.medProductsPath)
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = json.Unmarshal(data, &medProducts)
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	if medProducts.Map == nil {
+		c.MedProducts.Map = map[string]map[string]map[string][]MfgProduct{}
+	} else {
+		c.MedProducts = medProducts
 	}
 
 	return errorSlice
