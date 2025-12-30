@@ -21,6 +21,8 @@ type PrePackTemplates struct {
 	medProducts *MedProducts
 }
 
+//func (p *PrePackTemplates) CreateLogEntry(log *PrePackLog)
+
 func (p *PrePackTemplates) GetMfgProducts(i int) []MfgProduct {
 	return p.medProducts.Map[p.List[i].Medication][p.List[i].Dose][p.List[i].Form]
 }
@@ -108,8 +110,6 @@ func (c *config) SavePrePackTemplates() error {
 	return nil
 }
 
-//func (p *PrePackTemplates) AddTemplate()
-
 type PrePackEntry struct {
 	Date        time.Time
 	PrePackLot  string
@@ -121,7 +121,8 @@ type PrePackEntry struct {
 }
 
 type PrePackLog struct {
-	List []PrePackEntry
+	List              []PrePackEntry
+	ControlCatagories []string
 }
 
 func (c *config) LoadControlTwoLog() error {
@@ -233,7 +234,7 @@ func (c *config) LoadNonControlLog() error {
 }
 
 func (c *config) SaveNonControlLog() error {
-	data, err := json.Marshal(c.nonControlPath)
+	data, err := json.Marshal(c.NonControlLog)
 	if err != nil {
 		return err
 	}
