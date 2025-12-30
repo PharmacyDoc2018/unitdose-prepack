@@ -124,6 +124,135 @@ type PrePackLog struct {
 	List []PrePackEntry
 }
 
+func (c *config) LoadControlTwoLog() error {
+	_, err := os.Stat(c.controlTwoPath)
+	if err != nil {
+		return err
+	}
+
+	controlTwoLog := PrePackLog{}
+	data, err := os.ReadFile(c.controlTwoPath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &controlTwoLog)
+	if err != nil {
+		return err
+	}
+
+	c.ControlTwoLog = controlTwoLog
+
+	return nil
+}
+
+func (c *config) SaveControlTwoLog() error {
+	data, err := json.Marshal(c.ControlTwoLog)
+	if err != nil {
+		return err
+	}
+
+	saveFile, err := os.OpenFile(c.controlTwoPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer saveFile.Close()
+
+	_, err = saveFile.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (c *config) LoadControlThreeToFiveLog() error {
+	_, err := os.Stat(c.controlThreeToFivePath)
+	if err != nil {
+		return err
+	}
+
+	controlThreeToFiveLog := PrePackLog{}
+	data, err := os.ReadFile(c.controlThreeToFivePath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &controlThreeToFiveLog)
+	if err != nil {
+		return err
+	}
+
+	c.ControlThreeToFiveLog = controlThreeToFiveLog
+
+	return nil
+}
+
+func (c *config) SaveControlThreeToFiveLog() error {
+	data, err := json.Marshal(c.ControlThreeToFiveLog)
+	if err != nil {
+		return err
+	}
+
+	saveFile, err := os.OpenFile(c.controlThreeToFivePath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer saveFile.Close()
+
+	_, err = saveFile.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
+func (c *config) LoadNonControlLog() error {
+	_, err := os.Stat(c.nonControlPath)
+	if err != nil {
+		return err
+	}
+
+	nonControlLog := PrePackLog{}
+	data, err := os.ReadFile(c.nonControlPath)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(data, &nonControlLog)
+	if err != nil {
+		return err
+	}
+
+	c.NonControlLog = nonControlLog
+
+	return nil
+}
+
+func (c *config) SaveNonControlLog() error {
+	data, err := json.Marshal(c.nonControlPath)
+	if err != nil {
+		return err
+	}
+
+	saveFile, err := os.OpenFile(c.nonControlPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
+	if err != nil {
+		return err
+	}
+	defer saveFile.Close()
+
+	_, err = saveFile.Write(data)
+	if err != nil {
+		return err
+	}
+
+	return nil
+
+}
+
 type PrepPersons struct {
 	Map map[string]struct{}
 }

@@ -8,13 +8,16 @@ import (
 )
 
 type config struct {
-	medProductsPath       string
-	MedProducts           MedProducts
-	prePackTemplatesPath  string
-	PrePackTemplates      PrePackTemplates
-	ControlTwoLog         PrePackLog
-	ControlThreeToFiveLog PrePackLog
-	NonControlLog         PrePackLog
+	medProductsPath        string
+	MedProducts            MedProducts
+	prePackTemplatesPath   string
+	PrePackTemplates       PrePackTemplates
+	controlTwoPath         string
+	ControlTwoLog          PrePackLog
+	controlThreeToFivePath string
+	ControlThreeToFiveLog  PrePackLog
+	nonControlPath         string
+	NonControlLog          PrePackLog
 }
 
 func initConfig() *config {
@@ -23,6 +26,10 @@ func initConfig() *config {
 	godotenv.Load(".env")
 	c.medProductsPath = os.Getenv("MED_PRODUCTS_PATH")
 	c.prePackTemplatesPath = os.Getenv("PREPACK_TEMPLATES_PATH")
+
+	c.controlTwoPath = os.Getenv("C_2_PATH")
+	c.controlThreeToFivePath = os.Getenv("C_3_TO_5_PATH")
+	c.nonControlPath = os.Getenv("NON_CONTROL_PATH")
 
 	c.MedProducts.Map = map[string]map[string]map[string][]MfgProduct{}
 	c.PrePackTemplates.List = []PrePackTemplate{}
@@ -53,6 +60,21 @@ func (c *config) saveData() []error {
 		errorSlice = append(errorSlice, err)
 	}
 
+	err = c.SaveControlTwoLog()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = c.SaveControlThreeToFiveLog()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = c.SaveNonControlLog()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
 	return errorSlice
 
 }
@@ -66,6 +88,21 @@ func (c *config) loadData() []error {
 	}
 
 	err = c.LoadPrePackTemplates()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = c.LoadControlTwoLog()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = c.LoadControlThreeToFiveLog()
+	if err != nil {
+		errorSlice = append(errorSlice, err)
+	}
+
+	err = c.LoadNonControlLog()
 	if err != nil {
 		errorSlice = append(errorSlice, err)
 	}
