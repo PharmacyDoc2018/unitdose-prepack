@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 
@@ -11,6 +10,7 @@ import (
 type config struct {
 	medProductsPath       string
 	MedProducts           MedProducts
+	prePackTemplatesPath  string
 	PrePackTemplates      PrePackTemplates
 	ControlTwoLog         PrePackLog
 	ControlThreeToFiveLog PrePackLog
@@ -22,9 +22,10 @@ func initConfig() *config {
 
 	godotenv.Load(".env")
 	c.medProductsPath = os.Getenv("MED_PRODUCTS_PATH")
+	c.prePackTemplatesPath = os.Getenv("PREPACK_TEMPLATES_PATH")
 
 	c.MedProducts.Map = map[string]map[string]map[string][]MfgProduct{}
-	c.PrePackTemplates.Map = map[PrePackTemplate]struct{}{}
+	c.PrePackTemplates.List = []PrePackTemplate{}
 
 	errorSlice := c.loadData()
 	if len(errorSlice) > 0 {
@@ -33,6 +34,8 @@ func initConfig() *config {
 		}
 	}
 
+	c.PrePackTemplates.medProducts = &c.MedProducts
+
 	return c
 }
 
@@ -40,19 +43,12 @@ func (c *config) saveData() []error {
 
 	errorSlice := []error{}
 
-	//-- Save c.MedProducts
-	data, err := json.Marshal(c.MedProducts)
+	err := c.SaveMedProducts()
 	if err != nil {
 		errorSlice = append(errorSlice, err)
 	}
 
-	saveFile, err := os.OpenFile(c.medProductsPath, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0644)
-	if err != nil {
-		errorSlice = append(errorSlice, err)
-	}
-	defer saveFile.Close()
-
-	_, err = saveFile.Write(data)
+	err = c.SavePrePackTemplates()
 	if err != nil {
 		errorSlice = append(errorSlice, err)
 	}
@@ -64,27 +60,14 @@ func (c *config) saveData() []error {
 func (c *config) loadData() []error {
 	errorSlice := []error{}
 
-	//-- Load MedProducts
-	_, err := os.Stat(c.medProductsPath)
+	err := c.LoadMedProducts()
 	if err != nil {
 		errorSlice = append(errorSlice, err)
 	}
 
-	medProducts := MedProducts{}
-	data, err := os.ReadFile(c.medProductsPath)
+	err = c.LoadPrePackTemplates()
 	if err != nil {
 		errorSlice = append(errorSlice, err)
-	}
-
-	err = json.Unmarshal(data, &medProducts)
-	if err != nil {
-		errorSlice = append(errorSlice, err)
-	}
-
-	if medProducts.Map == nil {
-		c.MedProducts.Map = map[string]map[string]map[string][]MfgProduct{}
-	} else {
-		c.MedProducts = medProducts
 	}
 
 	return errorSlice
