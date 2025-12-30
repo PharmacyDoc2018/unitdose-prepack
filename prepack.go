@@ -25,7 +25,7 @@ func (p *PrePackTemplates) GetMfgProducts(i int) []MfgProduct {
 	return p.medProducts.Map[p.List[i].Medication][p.List[i].Dose][p.List[i].Form]
 }
 
-func (p *PrePackTemplates) getMedications() map[string]struct{} {
+func (p *PrePackTemplates) GetMedications() map[string]struct{} {
 	returnMap := map[string]struct{}{}
 
 	for key := range p.medProducts.Map {
