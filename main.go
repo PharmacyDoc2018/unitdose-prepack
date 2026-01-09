@@ -13,27 +13,7 @@ func main() {
 
 	//err := c.PrePackTemplates.AddTemplate("diphenhydrAMINE", "25 mg", "PO CAP", "6", 180*24*time.Hour)
 
-	c.ControlTwoLog.ControlCatagories = []string{"2"}
-	c.ControlThreeToFiveLog.ControlCatagories = []string{"3", "4", "5"}
-	c.NonControlLog.ControlCatagories = []string{"6"}
-
-	fmt.Println(c.PrePackTemplates.GetMedications())
-
-	for med := range c.MedProducts.Map {
-		fmt.Println(med)
-
-		for dose := range c.MedProducts.Map[med] {
-			fmt.Println(dose)
-
-			for form := range c.MedProducts.Map[med][dose] {
-				fmt.Println(form)
-
-				for _, prdct := range c.MedProducts.Map[med][dose][form] {
-					fmt.Println(prdct.NDC)
-				}
-			}
-		}
-	}
+	c.NonControlLog.AddEntry(0, 0, 100, "25J343", "9/30/2028")
 
 	errSlice := c.saveData()
 	if len(errSlice) > 0 {

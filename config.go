@@ -43,6 +43,10 @@ func initConfig() *config {
 
 	c.PrePackTemplates.medProducts = &c.MedProducts
 
+	c.ControlTwoLog.prePacktemplates = &c.PrePackTemplates
+	c.ControlThreeToFiveLog.prePacktemplates = &c.PrePackTemplates
+	c.NonControlLog.prePacktemplates = &c.PrePackTemplates
+
 	return c
 }
 
