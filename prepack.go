@@ -68,6 +68,15 @@ func (p *PrePackTemplates) AddTemplate(medication, dose, form, controlCatagory s
 	return nil
 }
 
+func (p *PrePackTemplates) ListTemplates() []string {
+	templateList := []string{}
+	for _, template := range p.List {
+		templateList = append(templateList, template.Medication)
+	}
+
+	return templateList
+}
+
 func (c *config) LoadPrePackTemplates() error {
 	_, err := os.Stat(c.prePackTemplatesPath)
 	if err != nil {

@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 
+	"fyne.io/fyne"
+	"fyne.io/fyne/app"
 	"github.com/joho/godotenv"
 )
 
@@ -18,6 +20,7 @@ type config struct {
 	ControlThreeToFiveLog  PrePackLog
 	nonControlPath         string
 	NonControlLog          PrePackLog
+	App                    fyne.App
 }
 
 func initConfig() *config {
@@ -46,6 +49,8 @@ func initConfig() *config {
 	c.ControlTwoLog.prePacktemplates = &c.PrePackTemplates
 	c.ControlThreeToFiveLog.prePacktemplates = &c.PrePackTemplates
 	c.NonControlLog.prePacktemplates = &c.PrePackTemplates
+
+	c.App = app.New()
 
 	return c
 }
