@@ -210,6 +210,10 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 	return nil
 }
 
+func (p *PrePackLog) Len() int {
+	return len(p.List)
+}
+
 func (c *config) LoadControlTwoLog() error {
 	_, err := os.Stat(c.controlTwoPath)
 	if err != nil {
