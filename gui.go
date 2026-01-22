@@ -141,7 +141,7 @@ func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 	medicationEntry := widget.NewSelectEntry(medicationEntryOptions)
 
 	form := widget.NewForm(
-		widget.NewFormItem("Medication", medicationEntry),
+		widget.NewFormItem("Template", medicationEntry),
 		widget.NewFormItem("Dose", widget.NewEntry()),
 	)
 	w.SetContent(container.NewVBox(

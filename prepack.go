@@ -81,7 +81,7 @@ func (p *PrePackTemplates) ListNonControlTemplates() []string {
 	templateList := []string{}
 	for _, template := range p.List {
 		if template.ControlCatagory == "6" {
-			templateList = append(templateList, template.Medication)
+			templateList = append(templateList, fmt.Sprintf("%s %s %s", template.Medication, template.Dose, template.Form))
 		}
 	}
 
