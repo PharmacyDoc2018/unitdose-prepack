@@ -13,12 +13,30 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+type guiState struct {
+	nonControlLogEntriesBinding binding.List[any]
+	editEntryButton             *widget.Button
+	noncontrolLogSelectedID     widget.ListItemID
+	cThreeToFiveLogSelectedID   widget.ListItemID
+	cTwoLogSelectedID           widget.ListItemID
+	currentTab                  int
+}
+
 type myTheme struct{}
 
 func (myTheme) Color(n fyne.ThemeColorName, v fyne.ThemeVariant) color.Color {
 	if n == theme.ColorNameBackground {
-		return color.NRGBA{R: 245, G: 245, B: 245, A: 255}
+		return color.NRGBA{R: 240, G: 240, B: 240, A: 255}
 	}
+
+	if n == theme.ColorNameButton {
+		return color.NRGBA{R: 173, G: 216, B: 230, A: 255}
+	}
+
+	if n == theme.ColorNameDisabledButton {
+		return color.NRGBA{R: 210, G: 210, B: 210, A: 255}
+	}
+
 	return theme.DefaultTheme().Color(n, v)
 }
 
@@ -32,7 +50,18 @@ func (myTheme) Size(n fyne.ThemeSizeName) float32 {
 	return theme.DefaultTheme().Size(n)
 }
 
+func initGUIState() *guiState {
+	s := guiState{}
+	s.noncontrolLogSelectedID = -1
+	s.cThreeToFiveLogSelectedID = -1
+	s.cTwoLogSelectedID = -1
+	s.currentTab = 0
+
+	return &s
+}
+
 func (c *config) initHomeScreen() fyne.Window {
+	s := initGUIState()
 	c.App.Settings().SetTheme(&myTheme{})
 
 	w := c.App.NewWindow("Unitdose Prepack")
@@ -56,7 +85,16 @@ func (c *config) initHomeScreen() fyne.Window {
 	}(c.App.Settings().ThemeVariant()))
 	windowLabel.TextSize = 24
 
-	nonControlLogTable := createNonControlLogTable(c)
+	newEntryButton := widget.NewButton("Add Entry", func() {
+		newW := addNewEntryWindow(c, s)
+		newW.Show()
+	})
+	editEntryButton := widget.NewButton("Edit Entry", func() {})
+	editEntryButton.Disable()
+	s.editEntryButton = editEntryButton
+	bottomButtonsContainer := container.NewHBox(newEntryButton, s.editEntryButton)
+
+	nonControlLogTable := createNonControlLogTable(c, s)
 	nonControlLogScroll := container.NewScroll(nonControlLogTable)
 	nonControlLogScroll.SetMinSize(fyne.Size{
 		Width:  800,
@@ -71,19 +109,22 @@ func (c *config) initHomeScreen() fyne.Window {
 	cTwoTab := container.NewTabItem("CII Log", cTwoLogObj)
 
 	tabs := container.NewAppTabs(nonControlTab, cThreeToFiveLogTab, cTwoTab)
-
-	testButton := widget.NewButton("Test", func() {})
+	tabs.SelectedIndex()
+	tabs.OnSelected = func(currentTab *container.TabItem) {
+		s.currentTab = tabs.SelectedIndex()
+		updateButtonState(s)
+	}
 
 	w.SetContent(container.NewVBox(
 		windowLabel,
 		tabs,
-		testButton,
+		bottomButtonsContainer,
 	))
 
 	return w
 }
 
-func (c *config) addNewEntryWindow() fyne.Window {
+func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 	// Incomplete - current code in for reference only
 	w := c.App.NewWindow("Add Entry")
 	w.Resize(fyne.Size{
@@ -91,18 +132,19 @@ func (c *config) addNewEntryWindow() fyne.Window {
 		Height: 500,
 	})
 
-	medicationEntry := widget.NewSelectEntry(c.PrePackTemplates.ListTemplates())
+	medicationEntryOptions := []string{}
+	switch s.currentTab {
+	case 0: //-- NonControl Tab
+		medicationEntryOptions = c.PrePackTemplates.ListNonControlTemplates()
 
-	hello := widget.NewLabel("Hello Fyne!")
+	}
+	medicationEntry := widget.NewSelectEntry(medicationEntryOptions)
+
 	form := widget.NewForm(
 		widget.NewFormItem("Medication", medicationEntry),
 		widget.NewFormItem("Dose", widget.NewEntry()),
 	)
 	w.SetContent(container.NewVBox(
-		hello,
-		widget.NewButton("Hi!", func() {
-			hello.SetText("Welcome :)")
-		}),
 		form,
 	))
 
@@ -110,13 +152,14 @@ func (c *config) addNewEntryWindow() fyne.Window {
 
 }
 
-func createNonControlLogTable(c *config) *fyne.Container {
+func createNonControlLogTable(c *config, s *guiState) *fyne.Container {
 	nonControlLogEntriesBinding := binding.NewUntypedList()
 	for _, e := range c.NonControlLog.List {
 		nonControlLogEntriesBinding.Append(e)
 	}
+	s.nonControlLogEntriesBinding = nonControlLogEntriesBinding
 	nonControlLogObj := widget.NewListWithData(
-		nonControlLogEntriesBinding,
+		s.nonControlLogEntriesBinding,
 		func() fyne.CanvasObject {
 			return newPrePackRow()
 		},
@@ -151,6 +194,12 @@ func createNonControlLogTable(c *config) *fyne.Container {
 			)
 		},
 	)
+
+	nonControlLogObj.OnSelected = func(id widget.ListItemID) {
+		s.noncontrolLogSelectedID = id
+		s.editEntryButton.Enable()
+	}
+
 	nonControlLogObjWithHeader := container.NewBorder(
 		newPrePackHeader(),
 		nil,
@@ -204,4 +253,35 @@ func newPrePackHeader() fyne.CanvasObject {
 		widget.NewLabelWithStyle("Mfg Exp", fyne.TextAlignCenter, bold),
 		widget.NewLabelWithStyle("Quantity", fyne.TextAlignCenter, bold),
 	)
+}
+
+func updateButtonState(s *guiState) {
+	switch s.currentTab {
+	case 0: //-- NonControled Tab
+		if s.noncontrolLogSelectedID == -1 {
+			s.editEntryButton.Disable()
+		} else {
+			s.editEntryButton.Enable()
+		}
+
+	case 1: //-- CIII - V Tab
+		if s.cThreeToFiveLogSelectedID == -1 {
+			s.editEntryButton.Disable()
+		} else {
+			s.editEntryButton.Enable()
+		}
+
+	case 2: //-- CII Tab
+		if s.cTwoLogSelectedID == -1 {
+			s.editEntryButton.Disable()
+		} else {
+			s.editEntryButton.Enable()
+		}
+	}
+}
+
+func addEntry(c *config, s *guiState) {
+	switch s.currentTab {
+	case 0: //-- NonControled Tab
+	}
 }

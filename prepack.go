@@ -77,6 +77,18 @@ func (p *PrePackTemplates) ListTemplates() []string {
 	return templateList
 }
 
+func (p *PrePackTemplates) ListNonControlTemplates() []string {
+	templateList := []string{}
+	for _, template := range p.List {
+		if template.ControlCatagory == "6" {
+			templateList = append(templateList, template.Medication)
+		}
+	}
+
+	return templateList
+
+}
+
 func (c *config) LoadPrePackTemplates() error {
 	_, err := os.Stat(c.prePackTemplatesPath)
 	if err != nil {
