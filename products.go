@@ -17,6 +17,11 @@ type MedProducts struct {
 }
 
 func (m *MedProducts) AddProduct(medication, dose, form, mfgName, NDC, GTIN string) error {
+	NDC, err := formatNDC(NDC)
+	if err != nil {
+		return err
+	}
+
 	mfgProduct := MfgProduct{
 		MfgName: mfgName,
 		NDC:     NDC,

@@ -89,6 +89,32 @@ func (p *PrePackTemplates) ListNonControlTemplates() []string {
 
 }
 
+func (p *PrePackTemplates) ValidateNDC(templateName, NDC string) (name, dose, form string, err error) {
+	NDC, err = formatNDC(NDC)
+	if err != nil {
+		return "", "", "", err
+	}
+
+	for n := range p.medProducts.Map {
+		for d := range p.medProducts.Map[n] {
+			for f := range p.medProducts.Map[n][d] {
+				if fmt.Sprintf("%s %s %s", n, d, f) == templateName {
+					for _, product := range p.medProducts.Map[n][d][f] {
+						if product.NDC == NDC {
+							return n, d, f, nil
+						}
+					}
+					return "", "", "", fmt.Errorf("error. %s template found, but NDC: %s not found", templateName, NDC)
+
+				}
+
+			}
+		}
+	}
+
+	return "", "", "", fmt.Errorf("error. %s template not found", templateName)
+}
+
 func (c *config) LoadPrePackTemplates() error {
 	_, err := os.Stat(c.prePackTemplatesPath)
 	if err != nil {
