@@ -29,6 +29,9 @@ type guiState struct {
 	cTwoLogSelectedID           widget.ListItemID
 	currentTab                  int
 	currentWindowType           WindowType
+	tabs                        *container.AppTabs
+	addEntryForm                *widget.Form
+	nonControlLogTable          *fyne.Container
 }
 
 type myTheme struct{}
@@ -108,8 +111,8 @@ func (c *config) initHomeScreen() fyne.Window {
 	s.editEntryButton = editEntryButton
 	bottomButtonsContainer := container.NewHBox(addEntryButton, s.editEntryButton)
 
-	nonControlLogTable := createNonControlLogTable(c, s)
-	nonControlLogScroll := container.NewScroll(nonControlLogTable)
+	s.nonControlLogTable = createNonControlLogTable(c, s)
+	nonControlLogScroll := container.NewScroll(s.nonControlLogTable)
 	nonControlLogScroll.SetMinSize(fyne.Size{
 		Width:  800,
 		Height: 400,
@@ -128,6 +131,7 @@ func (c *config) initHomeScreen() fyne.Window {
 		s.currentTab = tabs.SelectedIndex()
 		stateChange(s)
 	}
+	s.tabs = tabs
 
 	w.SetContent(container.NewVBox(
 		windowLabel,
@@ -157,30 +161,60 @@ func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 
 	}
 	medicationEntry := widget.NewSelectEntry(medicationEntryOptions)
+	ndcEntry := widget.NewEntry()
+	mfgLotEntry := widget.NewEntry()
+	mfgExpEntry := widget.NewEntry()
+	quantityEntry := widget.NewEntry()
 
 	form := widget.NewForm(
 		widget.NewFormItem("Template", medicationEntry),
-		widget.NewFormItem("NDC", widget.NewEntry()),
-		widget.NewFormItem("Mfg Lot", widget.NewEntry()),
-		widget.NewFormItem("Mfg Exp", widget.NewEntry()),
-		widget.NewFormItem("Quantity", widget.NewEntry()),
+		widget.NewFormItem("NDC", ndcEntry),
+		widget.NewFormItem("Mfg Lot", mfgLotEntry),
+		widget.NewFormItem("Mfg Exp", mfgExpEntry),
+		widget.NewFormItem("Quantity", quantityEntry),
 	)
+	form.SubmitText = "Add Entry"
+	form.OnSubmit = func() {
+		templateIndex, productIndex, err := c.PrePackTemplates.ValidateNDC(medicationEntry.Text, ndcEntry.Text)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
 
-	enterButton := widget.NewButton("Enter", func() {})
-	cancelButton := widget.NewButton("Cancel", func() {
+		qty, err := strconv.Atoi(quantityEntry.Text)
+		if err != nil {
+			fmt.Println(err.Error())
+			w.Close()
+			return
+		}
+		switch s.currentTab {
+		case 0: //-- NonControl Tab
+			err = c.NonControlLog.AddEntry(templateIndex, productIndex, qty, mfgLotEntry.Text, mfgExpEntry.Text)
+			if err != nil {
+				fmt.Println(err.Error())
+				w.Close()
+				return
+			}
+		}
+
 		w.Close()
-		s.currentWindowType = Main
-		stateChange(s)
-	})
-	bottomButtonsContainer := container.NewHBox(enterButton, cancelButton)
+	}
+	form.OnCancel = func() {
+		w.Close()
+	}
+	s.addEntryForm = form
 
 	w.SetContent(container.NewVBox(
 		form,
-		bottomButtonsContainer,
 	))
 
 	return w
 
+}
+
+func addEntry(c *config, s *guiState) {
+	switch s.currentTab {
+	case 0: //-- NonControled Tab
+	}
 }
 
 func createNonControlLogTable(c *config, s *guiState) *fyne.Container {
@@ -323,13 +357,9 @@ func updateEditEntryButtonState(s *guiState) {
 	}
 }
 
-func addEntry(c *config, s *guiState) {
-	switch s.currentTab {
-	case 0: //-- NonControled Tab
-	}
-}
-
 func stateChange(s *guiState) {
 	updateAddEntryButtonStats(s)
 	updateEditEntryButtonState(s)
+
+	s.nonControlLogTable.Refresh()
 }

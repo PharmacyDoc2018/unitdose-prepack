@@ -17,20 +17,16 @@ func TestValidateNDC(t *testing.T) {
 	testTemplateName := "diphenhydrAMINE 25 mg PO CAP"
 	testNDC := "69618-0024-01"
 
-	n, d, f, err := templates.ValidateNDC(testTemplateName, testNDC)
+	templateIndex, productIndex, err := templates.ValidateNDC(testTemplateName, testNDC)
 	if err != nil {
 		t.Errorf("NDC validation failed: %s", err.Error())
 	}
 
-	if n != "diphenhydrAMINE" {
-		t.Errorf("medication name does not match: %s", n)
+	if templateIndex != 0 {
+		t.Errorf("bad template index returned: %d", templateIndex)
 	}
 
-	if d != "25 mg" {
-		t.Errorf("dose does not match %s", d)
-	}
-
-	if f != "PO CAP" {
-		t.Errorf("form does not match: %s", f)
+	if productIndex != 0 {
+		t.Errorf("bad template index returned: %d", templateIndex)
 	}
 }
