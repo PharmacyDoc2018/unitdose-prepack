@@ -273,6 +273,21 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 	return nil
 }
 
+func (p *PrePackLog) RemoveEntry(prePackLot string) error {
+	for i, entry := range p.List {
+		if prePackLot == entry.PrePackLot {
+			err := os.Remove(entry.BarcodePath)
+			if err != nil {
+				return err
+			}
+
+			p.List = append(p.List[:i], p.List[i+1:]...)
+			return nil
+		}
+	}
+	return fmt.Errorf("error. Entry with lot %s not found", prePackLot)
+}
+
 func (p *PrePackLog) Len() int {
 	return len(p.List)
 }
