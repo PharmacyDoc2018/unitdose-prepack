@@ -254,6 +254,11 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 		return err
 	}
 
+	mfgExp, err = formatMfgExpDate(mfgExp)
+	if err != nil {
+		return err
+	}
+
 	p.List = append(p.List, PrePackEntry{
 		Date:            time.Now(),
 		PrePackLot:      entryLot,

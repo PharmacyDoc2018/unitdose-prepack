@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"strings"
+	"time"
 )
 
 func formatNDC(ndc string) (string, error) {
@@ -81,4 +82,34 @@ func isAllNumeric(inpt string) bool {
 	}
 
 	return true
+}
+
+func formatMfgExpDate(date string) (string, error) {
+	dateFormats := []string{
+		"1/2/2006",
+		"01/02/2006",
+		"1/2/06",
+		"01/02/06",
+		"1-2-2006",
+		"01-02-2006",
+		"1-2/06",
+		"01-02-06",
+	}
+
+	var dateTime time.Time
+	var err error
+	for _, format := range dateFormats {
+		dateTime, err = time.Parse(format, date)
+		if err != nil {
+			continue
+		} else {
+			break
+		}
+	}
+
+	if dateTime.IsZero() {
+		return "", fmt.Errorf("error. unable to %s as a date", date)
+	}
+
+	return dateTime.Format("1/2/2006"), nil
 }

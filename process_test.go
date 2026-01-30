@@ -30,3 +30,62 @@ func TestValidateNDC(t *testing.T) {
 		t.Errorf("bad template index returned: %d", templateIndex)
 	}
 }
+
+func TestFormatMfgExpDate(t *testing.T) {
+	tests := []struct {
+		name           string
+		date           string
+		expectedResult string
+		expectedErr    bool
+	}{
+		{
+			"remove leading zeros",
+			"09/04/2025",
+			"9/4/2025",
+			false,
+		},
+		{
+			"extend short date",
+			"3/18/22",
+			"3/18/2022",
+			false,
+		},
+		{
+			"unchanged",
+			"5/25/2021",
+			"5/25/2021",
+			false,
+		},
+		{
+			"giberish",
+			"aksdfajeif",
+			"",
+			true,
+		},
+		{
+			"empty",
+			"",
+			"",
+			true,
+		},
+		{
+			"replace hyphens",
+			"4-26-2015",
+			"4/26/2015",
+			false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result, err := formatMfgExpDate(tt.date)
+			if result != tt.expectedResult {
+				t.Errorf("fail. Expected: %s. Actual: %s", tt.expectedResult, result)
+			}
+
+			if tt.expectedErr && err == nil {
+				t.Errorf("fail. Expected error. Actual: nil")
+			}
+		})
+	}
+}
