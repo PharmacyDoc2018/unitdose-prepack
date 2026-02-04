@@ -195,7 +195,7 @@ type PrePackLog struct {
 	prePacktemplates  *PrePackTemplates
 }
 
-func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot, mfgExp string) error {
+func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot, mfgExp string) (PrePackEntry, error) {
 	template := p.prePacktemplates.List[templateIndex]
 	mfgProduct := p.prePacktemplates.medProducts.Map[template.Medication][template.Dose][template.Form][productIndex]
 
@@ -208,12 +208,12 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 		return false
 	}(template.ControlCatagory, p.ControlCatagories)
 	if !isValidControlCat {
-		return fmt.Errorf("error. template %s %s %s is control catagory %s and not allowed for entry into selected log",
+		return PrePackEntry{}, fmt.Errorf("error. template %s %s %s is control catagory %s and not allowed for entry into selected log",
 			template.Medication, template.Dose, template.Form, template.ControlCatagory)
 	}
 
 	if !template.Active {
-		return fmt.Errorf("error. selected template is not active")
+		return PrePackEntry{}, fmt.Errorf("error. selected template is not active")
 	}
 
 	entryExp := time.Now().Add(template.BUD)
@@ -232,7 +232,7 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 		if isTodayEntry {
 			endNum, err := strconv.Atoi(string([]rune(entry.PrePackLot)[10:]))
 			if err != nil {
-				return err
+				return PrePackEntry{}, err
 			}
 
 			if endNum > maxSoFar {
@@ -251,15 +251,15 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 
 	barcodePath, err := barcode.GenerateBarcode(mfgProduct.GTIN, entryExp.Format("01/02/2006"), mfgLot, entryLot)
 	if err != nil {
-		return err
+		return PrePackEntry{}, err
 	}
 
 	mfgExp, err = formatMfgExpDate(mfgExp)
 	if err != nil {
-		return err
+		return PrePackEntry{}, err
 	}
 
-	p.List = append(p.List, PrePackEntry{
+	newEntry := PrePackEntry{
 		Date:            time.Now(),
 		PrePackLot:      entryLot,
 		PrePackTemplate: template,
@@ -268,9 +268,10 @@ func (p *PrePackLog) AddEntry(templateIndex, productIndex, quantity int, mfgLot,
 		MfgExp:          mfgExp,
 		BarcodePath:     barcodePath,
 		Quantity:        quantity,
-	})
+	}
+	p.List = append(p.List, newEntry)
 
-	return nil
+	return newEntry, nil
 }
 
 func (p *PrePackLog) RemoveEntry(prePackLot string) error {

@@ -24,6 +24,7 @@ type guiState struct {
 	nonControlLogEntriesBinding binding.List[any]
 	addEntryButton              *widget.Button
 	editEntryButton             *widget.Button
+	removeEntryButton           *widget.Button
 	noncontrolLogSelectedID     widget.ListItemID
 	cThreeToFiveLogSelectedID   widget.ListItemID
 	cTwoLogSelectedID           widget.ListItemID
@@ -101,7 +102,7 @@ func (c *config) initHomeScreen() fyne.Window {
 	addEntryButton := widget.NewButton("Add Entry", func() {
 		newW := addNewEntryWindow(c, s)
 		s.currentWindowType = AddEntry
-		stateChange(s)
+		s.stateChange()
 		newW.Show()
 	})
 	s.addEntryButton = addEntryButton
@@ -109,7 +110,24 @@ func (c *config) initHomeScreen() fyne.Window {
 	editEntryButton := widget.NewButton("Edit Entry", func() {})
 	editEntryButton.Disable()
 	s.editEntryButton = editEntryButton
-	bottomButtonsContainer := container.NewHBox(addEntryButton, s.editEntryButton)
+
+	removeEntryButton := widget.NewButton("Remove Entry", func() {
+		switch s.currentTab {
+		case 0: //-- NonControled Tab
+			val, _ := s.nonControlLogEntriesBinding.GetValue(s.noncontrolLogSelectedID)
+			entry := val.(PrePackEntry)
+			c.NonControlLog.RemoveEntry(entry.PrePackLot)
+			err := s.nonControlLogEntriesBinding.Remove(entry)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+			s.stateChange()
+		}
+	})
+	removeEntryButton.Disable()
+	s.removeEntryButton = removeEntryButton
+
+	bottomButtonsContainer := container.NewHBox(addEntryButton, s.editEntryButton, s.removeEntryButton)
 
 	s.nonControlLogTable = createNonControlLogTable(c, s)
 	nonControlLogScroll := container.NewScroll(s.nonControlLogTable)
@@ -129,7 +147,7 @@ func (c *config) initHomeScreen() fyne.Window {
 	tabs.SelectedIndex()
 	tabs.OnSelected = func(currentTab *container.TabItem) {
 		s.currentTab = tabs.SelectedIndex()
-		stateChange(s)
+		s.stateChange()
 	}
 	s.tabs = tabs
 
@@ -151,7 +169,7 @@ func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 
 	w.SetOnClosed(func() {
 		s.currentWindowType = Main
-		stateChange(s)
+		s.stateChange()
 	})
 
 	medicationEntryOptions := []string{}
@@ -186,15 +204,17 @@ func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 			w.Close()
 			return
 		}
+		newEntry := PrePackEntry{}
 		switch s.currentTab {
 		case 0: //-- NonControl Tab
-			err = c.NonControlLog.AddEntry(templateIndex, productIndex, qty, mfgLotEntry.Text, mfgExpEntry.Text)
+			newEntry, err = c.NonControlLog.AddEntry(templateIndex, productIndex, qty, mfgLotEntry.Text, mfgExpEntry.Text)
 			if err != nil {
 				fmt.Println(err.Error())
 				w.Close()
 				return
 			}
 		}
+		s.nonControlLogEntriesBinding.Append(newEntry)
 
 		w.Close()
 	}
@@ -209,12 +229,6 @@ func addNewEntryWindow(c *config, s *guiState) fyne.Window {
 
 	return w
 
-}
-
-func addEntry(c *config, s *guiState) {
-	switch s.currentTab {
-	case 0: //-- NonControled Tab
-	}
 }
 
 func createNonControlLogTable(c *config, s *guiState) *fyne.Container {
@@ -262,7 +276,7 @@ func createNonControlLogTable(c *config, s *guiState) *fyne.Container {
 
 	nonControlLogObj.OnSelected = func(id widget.ListItemID) {
 		s.noncontrolLogSelectedID = id
-		s.editEntryButton.Enable()
+		s.stateChange()
 	}
 
 	nonControlLogObjWithHeader := container.NewBorder(
@@ -357,9 +371,39 @@ func updateEditEntryButtonState(s *guiState) {
 	}
 }
 
-func stateChange(s *guiState) {
+func updateRemoveEntryButtonState(s *guiState) {
+	if s.currentWindowType != Main {
+		s.editEntryButton.Disable()
+		return
+	}
+	switch s.currentTab {
+	case 0: //-- NonControled Tab
+		if s.noncontrolLogSelectedID == -1 {
+			s.removeEntryButton.Disable()
+		} else {
+			s.removeEntryButton.Enable()
+		}
+
+	case 1: //-- CIII - V Tab
+		if s.cThreeToFiveLogSelectedID == -1 {
+			s.removeEntryButton.Disable()
+		} else {
+			s.removeEntryButton.Enable()
+		}
+
+	case 2: //-- CII Tab
+		if s.cTwoLogSelectedID == -1 {
+			s.removeEntryButton.Disable()
+		} else {
+			s.removeEntryButton.Enable()
+		}
+	}
+}
+
+func (s *guiState) stateChange() {
 	updateAddEntryButtonStats(s)
 	updateEditEntryButtonState(s)
+	updateRemoveEntryButtonState(s)
 
 	s.nonControlLogTable.Refresh()
 }
